@@ -9,3 +9,17 @@ export function insertExpense(price: number, category: number, date: string, inp
         values: [price, category, date, inputUserId],
     };
 }
+
+export function getCurrentMonthExpense(): Query {
+    const date = new Date();
+    const year = date.getFullYear();
+    const currentMonth = date.getMonth() + 1;
+    const nextMonth = date.getMonth() + 2;
+    const currentMonthStr = `${year}/${currentMonth}/01`;
+    const nextMonthStr = `${year}/${nextMonth}/01`;
+
+    return {
+        text: 'SELECT * FROM expenses WHERE date >= $1 AND date < $2',
+        values: [currentMonthStr, nextMonthStr]
+    };
+}
