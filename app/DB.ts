@@ -1,4 +1,4 @@
-function connectDB() {
+export function connectDB() {
 
   var { Client } = require('pg');
 
