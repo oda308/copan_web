@@ -1,7 +1,10 @@
-export class Expense {
+export default class Expense {
   price: number;
+
   category: number;
+
   date: string;
+
   inputUserId: number;
 
   constructor(price: number, category: number, date: string, inputUserId: number) {
@@ -11,5 +14,3 @@ export class Expense {
     this.inputUserId = inputUserId;
   }
 }
-
-
