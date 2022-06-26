@@ -6,13 +6,25 @@ const { Client } = require('pg');
 export default class DB {
   static client: any;
 
-  constructor() {
+  static init() {
+    console.log('dbのインスタンス取得');
     DB.client = DB.getDBClient();
+  }
+
+  static connect() {
     DB.client.connect()
       .then(() => console.log('connected'))
       .catch(
         (err: any) => console.error('connection error', err.stack),
       );
+  }
+
+  static disconnect() {
+    DB.client.end((err: any) => {
+      if (err) {
+        console.log('error during disconnection', err.stack);
+      }
+    });
   }
 
   static insertExpense(price: number, category: number, date: string, inputUserId: number) {
