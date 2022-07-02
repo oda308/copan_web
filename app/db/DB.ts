@@ -1,48 +1,47 @@
 /* eslint-disable no-console */
 
 require('dotenv').config();
-const { Client } = require('pg');
+const { Pool } = require('pg');
 
 export default class DB {
   static client: any;
 
   static init() {
-    console.log('dbのインスタンス取得');
     DB.client = DB.getDBClient();
   }
 
   static connect() {
-    DB.client.connect()
-      .then(() => console.log('connected'))
-      .catch(
-        (err: any) => console.error('connection error', err.stack),
-      );
-  }
-
-  static disconnect() {
-    DB.client.end((err: any) => {
-      if (err) {
-        console.log('error during disconnection', err.stack);
-      }
+    return new Promise((resolve) => {
+      DB.client.connect()
+        .then((connect: any) => {
+          console.log('connected');
+          resolve(connect);
+        }).catch(
+          (err: any) => console.error('error', err.stack),
+        );
     });
   }
 
   static insertExpense(price: number, category: number, date: string, inputUserId: number) {
-    const query = {
-      text: 'INSERT INTO expenses(last_updated, price, category, date, input_user_id) VALUES(current_timestamp, $1, $2, $3, $4)',
-      values: [price, category, date, inputUserId],
-    };
+    const queryString = 'INSERT INTO expenses(last_updated, price, category, date, input_user_id) VALUES(current_timestamp, $1, $2, $3, $4)';
 
-    DB.client.query(query, (err: any, res: any) => {
-      if (err) {
-        console.log(`Error: ${err.stack}`);
-      } else {
-        console.log(`Success: ${res.rows[0]}`);
-      }
-    });
+    DB.client
+      .connect()
+      .then((client: any) => {
+        client
+          .query(queryString, [price, category, date, inputUserId])
+          .then((res: any) => {
+            client.release();
+            console.log(res.rows[0]);
+          })
+          .catch((err: any) => {
+            client.release();
+            console.log(err.stack);
+          });
+      });
   }
 
-  static getCurrentMonthExpense() {
+  static async getCurrentMonthExpense(): Promise<any> {
     const date = new Date();
     const year = date.getFullYear();
     const currentMonth = date.getMonth() + 1;
@@ -50,18 +49,28 @@ export default class DB {
     const currentMonthStr = `${year}/${currentMonth}/01`;
     const nextMonthStr = `${year}/${nextMonth}/01`;
 
-    const query = {
-      text: 'SELECT * FROM expenses WHERE date >= $1 AND date < $2',
-      values: [currentMonthStr, nextMonthStr],
-    };
+    console.log(currentMonthStr);
+    console.log(nextMonthStr);
 
-    DB.client.query(query, (err: any, res: any) => {
-      if (err) {
-        console.log(`Error: ${err.stack}`);
-      } else {
-        console.log(`Success: ${res.rows[0]}`);
-        console.dir(res.rows);
-      }
+    const queryString = 'SELECT * FROM expenses WHERE date >= $1 AND date < $2';
+    const values = [currentMonthStr, nextMonthStr];
+
+    return new Promise((resolve) => {
+      DB.client
+        .connect()
+        .then((client: any) => {
+          client
+            .query(queryString, values)
+            .then((res: any) => {
+              console.log(res.rows);
+              resolve(res.rows);
+              client.release();
+            })
+            .catch((err: any) => {
+              client.release();
+              throw Error(`Failed getCurrentMonthExpense : ${err}`);
+            });
+        });
     });
   }
 
@@ -104,7 +113,7 @@ export default class DB {
       console.log(`port : ${port}`);
     }
 
-    return new Client({
+    return new Pool({
       user,
       host,
       database: db,
