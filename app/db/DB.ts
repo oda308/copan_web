@@ -22,14 +22,20 @@ export default class DB {
     });
   }
 
-  static insertExpense(price: number, category: number, date: string, inputUserId: number) {
-    const queryString = 'INSERT INTO expenses(last_updated, price, category, date, input_user_id) VALUES(current_timestamp, $1, $2, $3, $4)';
+  static insertExpense(
+    price: number,
+    category: number,
+    date: string,
+    content: string,
+    inputUserId: number,
+  ) {
+    const queryString = 'INSERT INTO expenses(last_updated, price, category, date, content, input_user_id) VALUES(current_timestamp, $1, $2, $3, $4, $5)';
 
     DB.client
       .connect()
       .then((client: any) => {
         client
-          .query(queryString, [price, category, date, inputUserId])
+          .query(queryString, [price, category, date, content, inputUserId])
           .then((res: any) => {
             client.release();
             console.log(res.rows[0]);
@@ -41,26 +47,15 @@ export default class DB {
       });
   }
 
-  static async getCurrentMonthExpense(): Promise<any> {
-    const date = new Date();
-    const year = date.getFullYear();
-    const currentMonth = date.getMonth() + 1;
-    const nextMonth = date.getMonth() + 2;
-    const currentMonthStr = `${year}/${currentMonth}/01`;
-    const nextMonthStr = `${year}/${nextMonth}/01`;
-
-    console.log(currentMonthStr);
-    console.log(nextMonthStr);
-
-    const queryString = 'SELECT * FROM expenses WHERE date >= $1 AND date < $2';
-    const values = [currentMonthStr, nextMonthStr];
+  static async getAllExpenses(): Promise<any> {
+    const queryString = 'SELECT * FROM expenses';
 
     return new Promise((resolve) => {
       DB.client
         .connect()
         .then((client: any) => {
           client
-            .query(queryString, values)
+            .query(queryString)
             .then((res: any) => {
               console.log(res.rows);
               resolve(res.rows);
@@ -68,7 +63,7 @@ export default class DB {
             })
             .catch((err: any) => {
               client.release();
-              throw Error(`Failed getCurrentMonthExpense : ${err}`);
+              throw Error(`Failed getAllExpenses : ${err}`);
             });
         });
     });

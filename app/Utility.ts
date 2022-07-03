@@ -7,23 +7,23 @@ export function getToday(): string {
   return `${year}-${month}-${date}`;
 }
 
-export function includesNeededParamsForInsertExpense(query: any): boolean {
+export function includesNeededParamsForInsertExpense(requestMap: any): boolean {
   let includesNeededParams = false;
 
-  if ('price' in query
-    && 'category' in query
-    && 'date' in query
-    && 'userId' in query) {
+  if (requestMap.get('price') != null
+    && requestMap.get('categoryId') != null
+    && requestMap.get('description') != null
+    && requestMap.get('date') != null) {
     includesNeededParams = true;
   }
 
   return includesNeededParams;
 }
 
-export function includesNeededParamsForGetExpenses(query: any): boolean {
+export function includesNeededParamsForGetExpenses(requestMap: any): boolean {
   let includesNeededParams = false;
 
-  if ('userId' in query) {
+  if (requestMap.get('userId') != null) {
     includesNeededParams = true;
   }
 
