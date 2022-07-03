@@ -26,6 +26,9 @@ http.createServer(async (req: any, res: any) => {
       if (includesNeededParamsForInsertExpense(urlParse.query)) {
         const expense = new Expense(198, 2, getToday(), 3);
         await DB.insertExpense(expense.price, expense.category, expense.date, expense.inputUserId);
+        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.write('Succeeded insert record');
+        res.end();
       } else {
         throw Error('Insufficient parameters for InsertExpense.');
       }
@@ -33,6 +36,10 @@ http.createServer(async (req: any, res: any) => {
       if (includesNeededParamsForGetExpenses(urlParse.query)) {
         const expenses = await DB.getCurrentMonthExpense();
         console.log(expenses);
+        const json = JSON.stringify([...expenses]);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.write(json);
+        res.end();
       } else {
         throw Error('Insufficient parameters for GetExpenses.');
       }
@@ -42,8 +49,4 @@ http.createServer(async (req: any, res: any) => {
   } else {
     throw Error('Action was not found.');
   }
-
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.write('Hello there');
-  res.end();
 }).listen(5500);
