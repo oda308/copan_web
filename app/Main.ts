@@ -1,7 +1,11 @@
-import DB from './db/db';
+import DB from './db/Db';
 import { includesNeededParamsForInsertExpense, includesNeededParamsForGetExpenses } from './Utility';
 
 const http = require('http');
+
+const mockJson = require('./mock/InsertExpense.json');
+
+const usesMock = false;
 
 function convertRequestBodyToMap(buffers: Uint8Array[]) {
   const data = Buffer.concat(buffers).toString();
@@ -17,17 +21,20 @@ http.createServer(async (req: any, res: any) => {
     return;
   }
 
-  // testUrl
-  // http://127.0.0.1:5500/?action=insertExpense&price=1234&category=3&date&2022-06-26&userId=2
-  // http://127.0.0.1:5500/?action=getAllExpenses&userId=2
-
   const buffers: Uint8Array[] = [];
   for await (const chunk of req) {
     buffers.push(chunk);
   }
-  const reqMap = convertRequestBodyToMap(buffers) as Map<string, any>;
 
-  if (reqMap.get('action') === 'insertExpense') {
+  let reqMap: Map<string, any >;
+
+  if (usesMock) {
+    reqMap = new Map(Object.entries(mockJson));
+  } else {
+    reqMap = convertRequestBodyToMap(buffers) as Map<string, any>;
+  }
+
+  if (reqMap.get('action') === 'insertExpense' || usesMock) {
     if (includesNeededParamsForInsertExpense(reqMap)) {
       await DB.insertExpense(
         reqMap.get('price'),
@@ -55,3 +62,4 @@ http.createServer(async (req: any, res: any) => {
     }
   }
 }).listen(5500);
+console.log('Server is ready');
