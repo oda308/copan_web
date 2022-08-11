@@ -3,3 +3,16 @@ version: "3"
 services:
   node:
     build: ./Dockerfiles/node
+    environment: 
+      - NODE_ENV=${NODE_ENV}
+    env_file:
+      - .env
+    
+  postgres:
+    image: postgres:14.4
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    env_file:
+      - .env
+
