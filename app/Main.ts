@@ -1,9 +1,13 @@
 import DB from './db/Db';
-import { includesNeededParamsForInsertExpense, includesNeededParamsForGetExpenses } from './Utility';
+import Utility from './Utility';
 
 const http = require('http');
 
-const mockJson = require('./mock/InsertExpense.json');
+const port = '5500';
+const hostname = 'localhost';
+
+const mockJsonInsert = require('./mock/InsertExpense.json');
+const mockJsonDelete = require('./mock/DeleteExpense.json');
 
 const usesMock = false;
 
@@ -16,7 +20,7 @@ function convertRequestBodyToMap(buffers: Uint8Array[]) {
 
 DB.init();
 
-http.createServer(async (req: any, res: any) => {
+const server = http.createServer(async (req: any, res: any) => {
   if (req.url === '/favicon.ico') {
     return;
   }
@@ -26,22 +30,23 @@ http.createServer(async (req: any, res: any) => {
     buffers.push(chunk);
   }
 
-  let reqMap: Map<string, any >;
+  let reqMap: Map<string, any>;
 
   if (usesMock) {
-    reqMap = new Map(Object.entries(mockJson));
+    reqMap = new Map(Object.entries(mockJsonDelete));
   } else {
     reqMap = convertRequestBodyToMap(buffers) as Map<string, any>;
   }
 
-  if (reqMap.get('action') === 'insertExpense' || usesMock) {
-    if (includesNeededParamsForInsertExpense(reqMap)) {
+  if (reqMap.get('action') === 'insertExpense') {
+    if (Utility.includesNeededParamsForInsertExpense(reqMap)) {
       await DB.insertExpense(
         reqMap.get('price'),
         reqMap.get('categoryId'),
         reqMap.get('date'),
         reqMap.get('description'),
         reqMap.get('inputUserId'),
+        reqMap.get('expenseUuid'),
       );
       res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.write('Succeeded insert record');
@@ -49,8 +54,19 @@ http.createServer(async (req: any, res: any) => {
     } else {
       throw Error('Insufficient parameters for InsertExpense.');
     }
+  } else if (reqMap.get('action') === 'deleteExpense') {
+    if (Utility.includesNeededParamsForDeleteExpense(reqMap)) {
+      await DB.deleteExpense(
+        reqMap.get('expenseUuid'),
+      );
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.write('Succeeded delete record');
+      res.end();
+    } else {
+      throw Error('Insufficient parameters for deleteExpense.');
+    }
   } else if (reqMap.get('action') === 'getAllExpenses') {
-    if (includesNeededParamsForGetExpenses(reqMap)) {
+    if (Utility.includesNeededParamsForGetExpenses(reqMap)) {
       const expenses = await DB.getAllExpenses();
       console.log(expenses);
       const json = JSON.stringify([...expenses]);
@@ -61,5 +77,8 @@ http.createServer(async (req: any, res: any) => {
       throw Error('Insufficient parameters for GetExpenses.');
     }
   }
-}).listen(5500);
-console.log('Server is ready');
+});
+
+server.listen(port, hostname, () => {
+  console.log(`Server running at http://${hostname}:${port}/`);
+});

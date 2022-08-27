@@ -1,31 +1,35 @@
-export function getToday(): string {
-  const now = new Date();
-  const year = now.getFullYear().toString();
-  const month = (now.getMonth() + 1).toString();
-  const date = now.getDate().toString();
+export default class Utility {
+  static includesNeededParamsForInsertExpense(requestMap: any): boolean {
+    let includesNeededParams = false;
 
-  return `${year}-${month}-${date}`;
-}
+    if (requestMap.get('price') != null
+      && requestMap.get('categoryId') != null
+      && requestMap.get('description') != null
+      && requestMap.get('date') != null
+      && requestMap.get('expenseUuid') != null) {
+      includesNeededParams = true;
+    }
 
-export function includesNeededParamsForInsertExpense(requestMap: any): boolean {
-  let includesNeededParams = false;
-
-  if (requestMap.get('price') != null
-    && requestMap.get('categoryId') != null
-    && requestMap.get('description') != null
-    && requestMap.get('date') != null) {
-    includesNeededParams = true;
+    return includesNeededParams;
   }
 
-  return includesNeededParams;
-}
+  static includesNeededParamsForDeleteExpense(requestMap: any): boolean {
+    let includesNeededParams = false;
 
-export function includesNeededParamsForGetExpenses(requestMap: any): boolean {
-  let includesNeededParams = false;
+    if (requestMap.get('expenseUuid') != null) {
+      includesNeededParams = true;
+    }
 
-  if (requestMap.get('userId') != null) {
-    includesNeededParams = true;
+    return includesNeededParams;
   }
 
-  return includesNeededParams;
+  static includesNeededParamsForGetExpenses(requestMap: any): boolean {
+    let includesNeededParams = false;
+
+    if (requestMap.get('userId') != null) {
+      includesNeededParams = true;
+    }
+
+    return includesNeededParams;
+  }
 }

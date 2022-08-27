@@ -28,14 +28,36 @@ export default class DB {
     date: string,
     content: string,
     inputUserId: number,
+    expenseUuid: string,
   ) {
-    const queryString = 'INSERT INTO expenses(last_updated, price, category, date, content, input_user_id) VALUES(current_timestamp, $1, $2, $3, $4, $5)';
+    const queryString = 'INSERT INTO expenses(last_updated, price, category, date, content, input_user_id, expense_uuid) VALUES(current_timestamp, $1, $2, $3, $4, $5, $6)';
 
     DB.client
       .connect()
       .then((client: any) => {
         client
-          .query(queryString, [price, category, date, content, inputUserId])
+          .query(queryString, [price, category, date, content, inputUserId, expenseUuid])
+          .then((res: any) => {
+            client.release();
+            console.log(res.rows[0]);
+          })
+          .catch((err: any) => {
+            client.release();
+            console.log(err.stack);
+          });
+      });
+  }
+
+  static deleteExpense(
+    expenseUuid: string,
+  ) {
+    const queryString = 'DELETE FROM expenses WHERE expense_uuid = $1';
+
+    DB.client
+      .connect()
+      .then((client: any) => {
+        client
+          .query(queryString, [expenseUuid])
           .then((res: any) => {
             client.release();
             console.log(res.rows[0]);

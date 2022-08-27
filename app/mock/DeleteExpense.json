@@ -1,0 +1,4 @@
+{
+    "action":"deleteExpense",
+    "expenseUuid":"testtest"
+}
