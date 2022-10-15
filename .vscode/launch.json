@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run index.ts",
+            "type": "node",
+            "request": "launch",
+            "args": ["${workspaceRoot}/app/Main.ts"],
+            "runtimeArgs": ["--nolazy", "-r", "ts-node/register"],
+            "sourceMaps": true,
+            "cwd": "${workspaceRoot}",
+        }
+    ]
+}
