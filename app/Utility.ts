@@ -1,35 +1,21 @@
 export default class Utility {
-  static includesNeededParamsForInsertExpense(requestMap: any): boolean {
-    let includesNeededParams = false;
-
-    if (requestMap.get('price') != null
-      && requestMap.get('categoryId') != null
-      && requestMap.get('description') != null
-      && requestMap.get('date') != null
-      && requestMap.get('expenseUuid') != null) {
-      includesNeededParams = true;
+  static includesNeededParamsForInsertExpense(body: any): boolean {
+    if (body.price != null
+      && body.categoryId != null
+      && body.description != null
+      && body.date != null
+      && body.expenseUuid != null) {
+      return true;
     }
 
-    return includesNeededParams;
+    return false;
   }
 
-  static includesNeededParamsForDeleteExpense(requestMap: any): boolean {
-    let includesNeededParams = false;
-
-    if (requestMap.get('expenseUuid') != null) {
-      includesNeededParams = true;
-    }
-
-    return includesNeededParams;
+  static includesNeededParamsForDeleteExpense(body: any): boolean {
+    return body.expenseUuid != null;
   }
 
-  static includesNeededParamsForGetExpenses(requestMap: any): boolean {
-    let includesNeededParams = false;
-
-    if (requestMap.get('userId') != null) {
-      includesNeededParams = true;
-    }
-
-    return includesNeededParams;
+  static includesNeededParamsForGetExpenses(body: any): boolean {
+    return body.userId != null;
   }
 }

@@ -1,80 +1,73 @@
+import { AssertionError } from 'assert';
+import { assert } from 'console';
 import DB from './db/Db';
 import Utility from './Utility';
+import jwtSecret from './authenticate/init';
 
+const passport = require('passport');
 const express = require('express');
+const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
 
 const app = express();
-
+app.use(bodyParser.json());
+// passportの初期化
+app.use(passport.initialize());
 const port = 5500;
-
-const mockJsonInsert = require('./mock/InsertExpense.json');
-const mockJsonDelete = require('./mock/DeleteExpense.json');
-
-const usesMock = false;
-
-function convertRequestBodyToMap(buffers: Uint8Array[]) {
-  const data = Buffer.concat(buffers).toString();
-  const json = JSON.parse(data);
-  const map = new Map(Object.entries(json));
-  return map;
-}
 
 DB.init();
 
 app.post('/', async (req: any, res: any) => {
-  const buffers: Uint8Array[] = [];
-  for await (const chunk of req) {
-    buffers.push(chunk);
-  }
-
-  let reqMap: Map<string, any>;
-
-  if (usesMock) {
-    reqMap = new Map(Object.entries(mockJsonDelete));
-  } else {
-    reqMap = convertRequestBodyToMap(buffers) as Map<string, any>;
-  }
-
-  if (reqMap.get('action') === 'insertExpense') {
-    if (Utility.includesNeededParamsForInsertExpense(reqMap)) {
+  if (req.body.action === 'insertExpense') {
+    if (Utility.includesNeededParamsForInsertExpense(req.body)) {
       await DB.insertExpense(
-        reqMap.get('price'),
-        reqMap.get('categoryId'),
-        reqMap.get('date'),
-        reqMap.get('description'),
-        reqMap.get('inputUserId'),
-        reqMap.get('expenseUuid'),
+        req.body.price,
+        req.body.categoryId,
+        req.body.date,
+        req.body.description,
+        req.body.inputUserId,
+        req.body.expenseUuid,
       );
-      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.write('Succeeded insert record');
-      res.end();
+      res.send('Succeeded insert record');
     } else {
-      throw Error('Insufficient parameters for InsertExpense.');
+      console.log('Error: Insufficient parameters for InsertExpense.');
     }
-  } else if (reqMap.get('action') === 'deleteExpense') {
-    if (Utility.includesNeededParamsForDeleteExpense(reqMap)) {
+  } else if (req.body.action === 'deleteExpense') {
+    if (Utility.includesNeededParamsForDeleteExpense(req.body)) {
       await DB.deleteExpense(
-        reqMap.get('expenseUuid'),
+        req.body.expenseUuid,
       );
-      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.write('Succeeded delete record');
-      res.end();
+      res.send('Succeeded delete record');
     } else {
-      throw Error('Insufficient parameters for deleteExpense.');
+      console.log('Error: Insufficient parameters for deleteExpense.');
     }
-  } else if (reqMap.get('action') === 'getAllExpenses') {
-    if (Utility.includesNeededParamsForGetExpenses(reqMap)) {
+  } else if (req.body.action === 'getAllExpenses') {
+    if (Utility.includesNeededParamsForGetExpenses(req.body)) {
       const expenses = await DB.getAllExpenses();
       console.log(expenses);
       const json = JSON.stringify([...expenses]);
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.write(json);
-      res.end();
+      res.json(json);
     } else {
-      throw Error('Insufficient parameters for GetExpenses.');
+      throw assert('Error: Insufficient parameters for GetExpenses.');
     }
   }
 });
+
+app.post(
+  '/auth/login',
+  passport.authenticate('local', { session: false }),
+  (req: any, res: any) => {
+    console.log('Login Successful!');
+    console.log(`mail_address: ${req.body.mail_address}`);
+    console.log(`password: ${req.body.password}`);
+    const payload = { user: req.body.mail_address };
+    const token = jwt.sign(payload, jwtSecret, {
+      expiresIn: '1m',
+    });
+    console.log(token);
+    res.json({ accessToken: token });
+  },
+);
 
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
