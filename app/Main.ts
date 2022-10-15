@@ -1,10 +1,11 @@
 import DB from './db/Db';
 import Utility from './Utility';
 
-const http = require('http');
+const express = require('express');
 
-const port = '5500';
-const hostname = 'localhost';
+const app = express();
+
+const port = 5500;
 
 const mockJsonInsert = require('./mock/InsertExpense.json');
 const mockJsonDelete = require('./mock/DeleteExpense.json');
@@ -20,11 +21,7 @@ function convertRequestBodyToMap(buffers: Uint8Array[]) {
 
 DB.init();
 
-const server = http.createServer(async (req: any, res: any) => {
-  if (req.url === '/favicon.ico') {
-    return;
-  }
-
+app.post('/', async (req: any, res: any) => {
   const buffers: Uint8Array[] = [];
   for await (const chunk of req) {
     buffers.push(chunk);
@@ -79,6 +76,6 @@ const server = http.createServer(async (req: any, res: any) => {
   }
 });
 
-server.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
+app.listen(port, () => {
+  console.log(`App listening on port ${port}`);
 });
