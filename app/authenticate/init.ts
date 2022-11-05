@@ -10,13 +10,13 @@ const jwtSecret = 'secret';
 export default jwtSecret;
 
 const user = {
-  usernameField: 'mail_address',
+  usernameField: 'email',
   passwordField: 'password',
   session: false,
 };
 
 // passport-localの設定
-passport.use(new LocalStrategy(user, (mailAddress: string, password: string, done: any) => {
+passport.use(new LocalStrategy(user, (email: string, password: string, done: any) => {
   // saltを作成
   const salt = crypto.randomBytes(16);
   crypto.pbkdf2(password, salt, 310000, 32, 'sha256', (err: Error, hashedPassword: Buffer) => {
@@ -35,7 +35,7 @@ passport.use(new LocalStrategy(user, (mailAddress: string, password: string, don
 
     // パスワードが一致
     console.log('パスワードが一致しました');
-    return done(null, mailAddress);
+    return done(null, email);
   });
 }));
 
