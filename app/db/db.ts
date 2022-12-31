@@ -69,6 +69,55 @@ export default class DB {
       });
   }
 
+  static async isUserRegistered(
+    email: string,
+  ): Promise<boolean> {
+    const queryString = 'SELECT COUNT(*) FROM users WHERE email = $1';
+
+    return new Promise((resolve) => {
+      DB.client
+        .connect()
+        .then((client: any) => {
+          client
+            .query(queryString, [email])
+            .then((res: any) => {
+              client.release();
+              console.log(`登録済みユーザ数: ${res.rows[0].count}`);
+              resolve(res.rows[0].count > 0);
+            })
+            .catch((err: any) => {
+              client.release();
+              console.log(err.stack);
+            });
+        });
+    });
+  }
+
+  static registerUser(
+    name: string,
+    email: string,
+    password: string,
+    accessToken: string,
+  ) {
+    const queryString = 'INSERT INTO users (name, email, password, access_token) VALUES ($1, $2, $3, $4)';
+    const values = [name, email, password, accessToken];
+
+    DB.client
+      .connect()
+      .then((client: any) => {
+        client
+          .query(queryString, values)
+          .then((res: any) => {
+            client.release();
+            console.log(res.rows[0]);
+          })
+          .catch((err: any) => {
+            client.release();
+            console.log(err.stack);
+          });
+      });
+  }
+
   static async getAllExpenses(): Promise<any> {
     const queryString = 'SELECT * FROM expenses';
 

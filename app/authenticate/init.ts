@@ -1,4 +1,4 @@
-import { userInfo } from 'os';
+import { jwtSecret } from '../jwt';
 
 const LocalStrategy = require('passport-local');
 const crypto = require('crypto');
@@ -6,8 +6,7 @@ const JwtStrategy = require('passport-jwt').Strategy;
 const { ExtractJwt } = require('passport-jwt');
 const passport = require('passport');
 
-const jwtSecret = 'secret';
-export default jwtSecret;
+export default passport;
 
 const user = {
   usernameField: 'email',
