@@ -1,4 +1,5 @@
 import { jwtSecret } from '../jwt';
+import encryptPassword from '../encrypt';
 
 const LocalStrategy = require('passport-local');
 const crypto = require('crypto');
@@ -15,27 +16,28 @@ const user = {
 };
 
 // passport-localの設定
-passport.use(new LocalStrategy(user, (email: string, password: string, done: any) => {
-  // saltを作成
-  const salt = crypto.randomBytes(16);
-  crypto.pbkdf2(password, salt, 310000, 32, 'sha256', (err: Error, hashedPassword: Buffer) => {
-    // パスワードのハッシュ化でエラー
-    if (err) {
-      console.log(`err: ${err}`);
-    }
+passport.use(new LocalStrategy(user, async (email: string, password: string, done: any) => {
+  const hashedPassword = await encryptPassword(password);
 
-    // 入力したパスワードが一致しない場合
-    if (!crypto.timingSafeEqual(hashedPassword, hashedPassword)) {
-      console.log('パスワードが違います');
-      return done(null, false, {
-        message: 'ログイン成功',
-      });
-    }
+  if (hashedPassword === null) {
+    return done(null, false, {
+      message: 'ログイン失敗',
+    });
+  }
 
-    // パスワードが一致
-    console.log('パスワードが一致しました');
-    return done(null, email);
-  });
+  const buffer = Buffer.from(hashedPassword);
+
+  // 入力したパスワードが一致しない場合
+  if (!crypto.timingSafeEqual(buffer, buffer)) {
+    console.log('パスワードが違います');
+    return done(null, false, {
+      message: 'ログイン失敗',
+    });
+  }
+
+  // パスワードが一致
+  console.log('パスワードが一致しました');
+  return done(null, email);
 }));
 
 // passport-jwtの設定
