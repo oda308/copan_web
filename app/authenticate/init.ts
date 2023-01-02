@@ -1,5 +1,6 @@
 import { jwtSecret } from '../jwt';
 import encryptPassword from '../encrypt';
+import DB from '../db/db';
 
 const LocalStrategy = require('passport-local');
 const crypto = require('crypto');
@@ -17,7 +18,10 @@ const user = {
 
 // passport-localの設定
 passport.use(new LocalStrategy(user, async (email: string, password: string, done: any) => {
-  const hashedPassword = await encryptPassword(password);
+  // DBからパスワードを取得
+  const map = await DB.getHashedPassword(email);
+
+  const hashedPassword = await encryptPassword(password, map.get('salt'));
 
   if (hashedPassword === null) {
     return done(null, false, {
@@ -25,10 +29,12 @@ passport.use(new LocalStrategy(user, async (email: string, password: string, don
     });
   }
 
-  const buffer = Buffer.from(hashedPassword);
+  const dbPassword = map.get('password');
+  const dbBuffer = Buffer.from(dbPassword as any);
+  const buffer = Buffer.from(hashedPassword.get('password') as any);
 
   // 入力したパスワードが一致しない場合
-  if (!crypto.timingSafeEqual(buffer, buffer)) {
+  if (!crypto.timingSafeEqual(buffer, dbBuffer)) {
     console.log('パスワードが違います');
     return done(null, false, {
       message: 'ログイン失敗',

@@ -3,6 +3,7 @@ import DB from './db/db';
 import Utility from './utility';
 import { getAccessToken } from './jwt';
 import passport from './authenticate/init'
+import encryptPassword from './encrypt';
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -24,10 +25,24 @@ async function registerUser(req: any, res: any) {
   } else {
     console.log('ユーザーは登録されていません');
     const token = getAccessToken(req.body.email);
+
+    const map = await encryptPassword(req.body.email);
+
+    if (map === null) {
+      console.log('Failed to encryptPassword');
+      res.json({ access_token: '' });
+      return;
+    }
+
+    console.log(`hashed: ${map.get('password')}`);
+    console.log(`salt: ${map.get('salt')}`);
+    console.log(`token: ${token}`);
+
     DB.registerUser(
       req.body.name,
       req.body.email,
-      req.body.password,
+      map.get('password') as any,
+      map.get('salt') as any,
       token,
     );
     res.json({ access_token: token });

@@ -97,10 +97,11 @@ export default class DB {
     name: string,
     email: string,
     password: string,
+    salt: string,
     accessToken: string,
   ) {
-    const queryString = 'INSERT INTO users (name, email, password, access_token) VALUES ($1, $2, $3, $4)';
-    const values = [name, email, password, accessToken];
+    const queryString = 'INSERT INTO users (name, email, password, salt, access_token) VALUES ($1, $2, $3, $4, $5)';
+    const values = [name, email, password, salt, accessToken];
 
     DB.client
       .connect()
@@ -135,6 +136,32 @@ export default class DB {
             .catch((err: any) => {
               client.release();
               throw Error(`Failed getAllExpenses : ${err}`);
+            });
+        });
+    });
+  }
+
+  static async getHashedPassword(email: string): Promise<Map<string, string>> {
+    const queryString = 'SELECT password, salt FROM users WHERE email = $1';
+
+    return new Promise((resolve) => {
+      DB.client
+        .connect()
+        .then((client: any) => {
+          client
+            .query(queryString, [email])
+            .then((res: any) => {
+              client.release();
+              console.log(res.rows);
+              const row = res.rows[0];
+              const map = new Map<string, string>();
+              map.set('password', row.password);
+              map.set('salt', row.salt);
+              resolve(map);
+            })
+            .catch((err: any) => {
+              client.release();
+              throw Error(`Failed getHashedPassword : ${err}`);
             });
         });
     });
