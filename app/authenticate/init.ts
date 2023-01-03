@@ -21,6 +21,12 @@ passport.use(new LocalStrategy(user, async (email: string, password: string, don
   // DBからパスワードを取得
   const map = await DB.getHashedPassword(email);
 
+  if (map === null) {
+    return done(null, false, {
+      message: 'ログイン失敗',
+    });
+  }
+
   const hashedPassword = await encryptPassword(password, map.get('salt'));
 
   if (hashedPassword === null) {

@@ -141,7 +141,7 @@ export default class DB {
     });
   }
 
-  static async getHashedPassword(email: string): Promise<Map<string, string>> {
+  static async getHashedPassword(email: string): Promise<Map<string, string> | null> {
     const queryString = 'SELECT password, salt FROM users WHERE email = $1';
 
     return new Promise((resolve) => {
@@ -154,6 +154,12 @@ export default class DB {
               client.release();
               console.log(res.rows);
               const row = res.rows[0];
+
+              if (row === undefined) {
+                resolve(null);
+                return;
+              }
+
               const map = new Map<string, string>();
               map.set('password', row.password);
               map.set('salt', row.salt);
