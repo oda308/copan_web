@@ -1,4 +1,4 @@
-import { jwtSecret } from '../jwt';
+import jwt from '../jwt';
 import encryptPassword from '../encrypt';
 import DB from '../db/db';
 
@@ -55,12 +55,12 @@ passport.use(new LocalStrategy(user, async (email: string, password: string, don
 // passport-jwtの設定
 const opts = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: jwtSecret,
-  issuer: 'accounts.examplesoft.com',
-  audience: 'yoursite.net',
+  secretOrKey: jwt.jwtSecret,
 };
 
 passport.use(new JwtStrategy(opts, (jwtPayload: any, done: any) => {
   console.log(jwtPayload);
   console.log(done);
 }));
+
+

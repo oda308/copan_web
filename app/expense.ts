@@ -5,12 +5,12 @@ export default class Expense {
 
   date: string;
 
-  inputUserId: number;
+  email: string;
 
-  constructor(price: number, category: number, date: string, inputUserId: number) {
+  constructor(price: number, category: number, date: string, email: string) {
     this.price = price;
     this.category = category;
     this.date = date;
-    this.inputUserId = inputUserId;
+    this.email = email;
   }
 }

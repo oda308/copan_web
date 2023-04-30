@@ -14,8 +14,4 @@ export default class Utility {
   static includesNeededParamsForDeleteExpense(body: any): boolean {
     return body.expenseUuid != null;
   }
-
-  static includesNeededParamsForGetExpenses(body: any): boolean {
-    return body.userId != null;
-  }
 }

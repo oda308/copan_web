@@ -1,7 +1,7 @@
 import { assert } from 'console';
 import DB from './db/db';
 import Utility from './utility';
-import { getAccessToken } from './jwt';
+import jwt from './jwt';
 import passport from './authenticate/init'
 import encryptPassword from './encrypt';
 
@@ -24,7 +24,9 @@ async function registerUser(req: any, res: any) {
     res.json({ access_token: '' });
   } else {
     console.log('ユーザーは登録されていません');
-    const token = getAccessToken(req.body.email);
+    const token = jwt.generateAccessToken(req.body.email);
+    const email = jwt.getEmailFromAccessToken(token);
+    console.log(email)
 
     const map = await encryptPassword(req.body.email);
 
@@ -50,19 +52,20 @@ async function registerUser(req: any, res: any) {
 }
 
 async function getAllExpenses(req: any, res: any) {
-  if (Utility.includesNeededParamsForGetExpenses(req.body)) {
-    const expenses = await DB.getAllExpenses();
-    console.log(expenses);
-    const json = JSON.stringify([...expenses]);
-    res.json(json);
-  } else {
-    throw assert('Error: Insufficient parameters for GetExpenses.');
-  }
+  const accessToken = req.headers.authorization
+  const expenses = await DB.getAllExpenses(accessToken);
+  console.log(expenses);
+  const json = JSON.stringify([...expenses]);
+  res.json(json);
 }
 
 async function deleteExpense(req: any, res: any) {
   if (Utility.includesNeededParamsForDeleteExpense(req.body)) {
+
+    const accessToken = req.headers.authorization
+
     await DB.deleteExpense(
+      accessToken,
       req.body.expenseUuid,
     );
     res.send('Succeeded delete record');
@@ -73,12 +76,14 @@ async function deleteExpense(req: any, res: any) {
 
 async function insertExpense(req: any, res: any) {
   if (Utility.includesNeededParamsForInsertExpense(req.body)) {
+    const accessToken = req.headers.authorization
+
     await DB.insertExpense(
+      accessToken,
       req.body.price,
       req.body.categoryId,
       req.body.date,
       req.body.description,
-      req.body.inputUserId,
       req.body.expenseUuid,
     );
     res.send('Succeeded insert record');
@@ -114,7 +119,7 @@ app.post(
     console.log('Login Successful!');
     console.log(`email: ${req.body.email}`);
     console.log(`password: ${req.body.password}`);
-    res.json({ accessToken: getAccessToken(req.body.email) });
+    res.json({ accessToken: jwt.generateAccessToken(req.body.email) });
   },
 );
 

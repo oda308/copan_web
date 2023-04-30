@@ -1,5 +1,7 @@
 /* eslint-disable no-console */
 
+import jwt from "../jwt";
+
 require('dotenv').config();
 const { Pool } = require('pg');
 
@@ -23,20 +25,19 @@ export default class DB {
   }
 
   static insertExpense(
+    accessToken: string,
     price: number,
     category: number,
     date: string,
     content: string,
-    inputUserId: number,
     expenseUuid: string,
   ) {
-    const queryString = 'INSERT INTO expenses(last_updated, price, category, date, content, input_user_id, expense_uuid) VALUES(current_timestamp, $1, $2, $3, $4, $5, $6)';
-
+    const queryString = 'INSERT INTO expenses(last_updated, price, category, date, content, expense_uuid, email) VALUES(current_timestamp, $1, $2, $3, $4, $5, $6)';
     DB.client
       .connect()
       .then((client: any) => {
         client
-          .query(queryString, [price, category, date, content, inputUserId, expenseUuid])
+          .query(queryString, [price, category, date, content, expenseUuid, jwt.getEmailFromAccessToken(accessToken)])
           .then((res: any) => {
             client.release();
             console.log(res.rows[0]);
@@ -49,15 +50,16 @@ export default class DB {
   }
 
   static deleteExpense(
-    expenseUuid: string,
+        accessToken: string,
+        expenseUuid: string,
   ) {
-    const queryString = 'DELETE FROM expenses WHERE expense_uuid = $1';
+    const queryString = 'DELETE FROM expenses WHERE expense_uuid = $1 AND email = $2';
 
     DB.client
       .connect()
       .then((client: any) => {
         client
-          .query(queryString, [expenseUuid])
+          .query(queryString, [expenseUuid, jwt.getEmailFromAccessToken(accessToken)])
           .then((res: any) => {
             client.release();
             console.log(res.rows[0]);
@@ -119,15 +121,16 @@ export default class DB {
       });
   }
 
-  static async getAllExpenses(): Promise<any> {
-    const queryString = 'SELECT * FROM expenses';
+  static async getAllExpenses(accessToken: string): Promise<any> {
+    const queryString = 'SELECT * FROM expenses WHERE expenses.email = $1';
+    const values = [jwt.getEmailFromAccessToken(accessToken)]
 
     return new Promise((resolve) => {
       DB.client
         .connect()
         .then((client: any) => {
           client
-            .query(queryString)
+            .query(queryString, values)
             .then((res: any) => {
               console.log(res.rows);
               resolve(res.rows);
