@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 // passportの初期化
 app.use(passport.initialize());
 
-const port = process.env.NODE_ENV === 'production' ? 8080 : 5500;
+const port = process.env.PORT || 3000;
 
 DB.init();
 

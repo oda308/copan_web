@@ -183,7 +183,7 @@ export default class DB {
     const host = process.env.HOST;
     const db = process.env.DB;
     const password = process.env.PASSWORD;
-    const port = process.env.PORT;
+    const dbPort = process.env.DB_PORT;
 
     if (user === undefined) {
       throw console.log('user is undefined');
@@ -205,10 +205,10 @@ export default class DB {
     } else {
       console.log(`password : ${password}`);
     }
-    if (port === undefined) {
-      throw console.log('port is undefined');
+    if (dbPort === undefined) {
+      throw console.log('dbPort is undefined');
     } else {
-      console.log(`port : ${port}`);
+      console.log(`dbPort : ${dbPort}`);
     }
 
     return new Pool({
@@ -216,7 +216,7 @@ export default class DB {
       host,
       database: db,
       password,
-      port,
+      dbPort,
     });
   }
 }
