@@ -16,7 +16,6 @@ app.use(bodyParser.json());
 app.use(passport.initialize());
 
 const port = process.env.NODE_ENV === 'production' ? 8080 : 5500;
-console.log(`envの確認: ${process.env.NODE_ENV}`);
 
 DB.init();
 
@@ -127,5 +126,6 @@ app.post(
 );
 
 app.listen(port, () => {
+  console.log(`envの確認: ${process.env.NODE_ENV}`);
   console.log(`App listening on port ${port}`);
 });
