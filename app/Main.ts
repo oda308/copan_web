@@ -2,8 +2,10 @@ import { assert } from 'console';
 import DB from './db/db';
 import Utility from './utility';
 import jwt from './jwt';
-import passport from './authenticate/init'
+import passport from './authenticate/init';
 import encryptPassword from './encrypt';
+
+require('dotenv').config();
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -12,7 +14,8 @@ const app = express();
 app.use(bodyParser.json());
 // passportの初期化
 app.use(passport.initialize());
-const port = 5500;
+
+const port = process.env.NODE_ENV === 'production' ? 8080 : 5500;
 
 DB.init();
 
@@ -26,7 +29,7 @@ async function registerUser(req: any, res: any) {
     console.log('ユーザーは登録されていません');
     const token = jwt.generateAccessToken(req.body.email);
     const email = jwt.getEmailFromAccessToken(token);
-    console.log(email)
+    console.log(email);
 
     const map = await encryptPassword(req.body.email);
 
@@ -61,8 +64,7 @@ async function getAllExpenses(req: any, res: any) {
 
 async function deleteExpense(req: any, res: any) {
   if (Utility.includesNeededParamsForDeleteExpense(req.body)) {
-
-    const accessToken = req.headers.authorization
+    const accessToken = req.headers.authorization;
 
     await DB.deleteExpense(
       accessToken,
