@@ -177,11 +177,7 @@ export default class DB {
   }
 
   static getDBClient() {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('current env: develop');
-    } else {
-      console.log('current env: production');
-    }
+    console.log(`current env: ${process.env.NODE_ENV}`);
 
     const user = process.env.USER;
     const host = process.env.HOST;
