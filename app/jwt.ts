@@ -14,6 +14,7 @@ export function generateAccessToken(email: string): string {
 export function getEmailFromAccessToken(accessToken: string) {
   try {
     const decoded = jsonwebtoken.verify(accessToken, jwtSecret);
+    console.log(decoded.email);
     return decoded.email;
   } catch (error) {
     console.error('Error decoding JWT:', error);

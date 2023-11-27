@@ -4,12 +4,11 @@ import Utility from './utility';
 import jwt from './jwt';
 import passport from './authenticate/init';
 import encryptPassword from './encrypt';
-import {v4 as uuidv4} from 'uuid';
-
 require('dotenv').config();
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 app.use(bodyParser.json());
@@ -48,31 +47,28 @@ function generateRandomPassword(length = 32) {
 
 async function registerUser(req: any, res: any) {
   console.log('ユーザー登録');
-  console.log(req.body);
-  console.log('ユーザーは登録されていません');
   const userId = uuidv4();
-  const token = jwt.generateAccessToken(req.body.email);
+  const token = jwt.generateAccessToken(userId);
   const password = generateRandomPassword();
   const map = await encryptPassword(password);
 
-    if (map === null) {
-      console.log('Failed to encryptPassword');
-      res.json({ access_token: '' });
-      return;
-    }
+  if (map === null) {
+    console.log('Failed to encryptPassword');
+    res.json({ access_token: '' });
+    return;
+  }
 
-    console.log(`hashed: ${map.get('password')}`);
-    console.log(`salt: ${map.get('salt')}`);
-    console.log(`token: ${token}`);
+  console.log(`hashed: ${map.get('password')}`);
+  console.log(`salt: ${map.get('salt')}`);
+  console.log(`token: ${token}`);
 
-    DB.registerUser(
-      req.body.name,
-      req.body.email,
-      map.get('password') as any,
-      map.get('salt') as any,
-      token,
-    );
-    res.json({ access_token: token });
+  DB.registerUser(
+    userId,
+    map.get('password') as any,
+    map.get('salt') as any,
+    token,
+  );
+  res.json({ access_token: token });
 }
 
 async function getAllExpenses(req: any, res: any) {
