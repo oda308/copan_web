@@ -62,5 +62,3 @@ passport.use(new JwtStrategy(opts, (jwtPayload: any, done: any) => {
   console.log(jwtPayload);
   console.log(done);
 }));
-
-

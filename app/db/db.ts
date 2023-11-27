@@ -96,14 +96,13 @@ export default class DB {
   }
 
   static registerUser(
-    name: string,
     email: string,
     password: string,
     salt: string,
     accessToken: string,
   ) {
-    const queryString = 'INSERT INTO users (name, email, password, salt, access_token) VALUES ($1, $2, $3, $4, $5)';
-    const values = [name, email, password, salt, accessToken];
+    const queryString = 'INSERT INTO users (email, password, salt, access_token) VALUES ($1, $2, $3, $4)';
+    const values = [email, password, salt, accessToken];
 
     DB.client
       .connect()

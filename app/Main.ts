@@ -4,6 +4,7 @@ import Utility from './utility';
 import jwt from './jwt';
 import passport from './authenticate/init';
 import encryptPassword from './encrypt';
+import {v4 as uuidv4} from 'uuid';
 
 require('dotenv').config();
 
@@ -19,19 +20,40 @@ const port = process.env.PORT || 3000;
 
 DB.init();
 
+app.use('/', async (req: any, res: any, next: any) => {
+  if (req.body.action === 'registerUser') {
+    next();
+    return;
+  }
+  const email = jwt.getEmailFromAccessToken(req.headers.authorization);
+  const isRegistered = await DB.isUserRegistered(email);
+
+  if (isRegistered) {
+    next();
+  } else {
+    res.status(401).json({ message: 'Authentication failed: User not registered.' });
+  }
+});
+
+function generateRandomPassword(length = 32) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const passwordArray = [];
+
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    passwordArray.push(characters.charAt(randomIndex));
+  }
+  return passwordArray.join('');
+}
+
 async function registerUser(req: any, res: any) {
   console.log('ユーザー登録');
   console.log(req.body);
-  if (await DB.isUserRegistered(req.body.email)) {
-    console.log('ユーザーは既に登録されています');
-    res.json({ access_token: '' });
-  } else {
-    console.log('ユーザーは登録されていません');
-    const token = jwt.generateAccessToken(req.body.email);
-    const email = jwt.getEmailFromAccessToken(token);
-    console.log(email);
-
-    const map = await encryptPassword(req.body.email);
+  console.log('ユーザーは登録されていません');
+  const userId = uuidv4();
+  const token = jwt.generateAccessToken(req.body.email);
+  const password = generateRandomPassword();
+  const map = await encryptPassword(password);
 
     if (map === null) {
       console.log('Failed to encryptPassword');
@@ -51,7 +73,6 @@ async function registerUser(req: any, res: any) {
       token,
     );
     res.json({ access_token: token });
-  }
 }
 
 async function getAllExpenses(req: any, res: any) {
@@ -94,24 +115,28 @@ async function insertExpense(req: any, res: any) {
   }
 }
 
-app.post('/', async (req: any, res: any) => {
-  switch (req.body.action) {
-    case 'insertExpense':
-      await insertExpense(req, res);
-      break;
-    case 'deleteExpense':
-      await deleteExpense(req, res);
-      break;
-    case 'getAllExpenses':
-      await getAllExpenses(req, res);
-      break;
-    case 'registerUser':
-      await registerUser(req, res);
-      break;
-    default:
-      console.log('Error: Unknown action');
-      break;
-  }
+app.post(
+  '/',
+  async (req: any, res: any) => {
+    switch (req.body.action) {
+      case 'insertExpense':
+        await insertExpense(req, res);
+        break;
+      case 'deleteExpense':
+        await deleteExpense(req, res);
+        break;
+      case 'getAllExpenses':
+        await getAllExpenses(req, res);
+        break;
+      default:
+        console.log('Error: Unknown action');
+        break;
+    }
+  },
+);
+
+app.post('/registerUser', async (req: any, res: any) => {
+  await registerUser(req, res);
 });
 
 app.post(
