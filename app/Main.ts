@@ -72,7 +72,7 @@ async function registerUser(req: any, res: any) {
 }
 
 async function getAllExpenses(req: any, res: any) {
-  const accessToken = req.headers.authorization
+  const accessToken = req.headers.authorization;
   const expenses = await DB.getAllExpenses(accessToken);
   console.log(expenses);
   const json = JSON.stringify([...expenses]);
