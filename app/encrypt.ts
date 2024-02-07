@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 
-// パスワードを暗号化する
+// パスワードをハッシュ化する
 async function encryptPassword(password: string, salt?: string)
   : Promise<Map<string, string> | null> {
   let usedSalt: string;

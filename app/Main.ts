@@ -3,22 +3,21 @@ import Utility from './utility';
 import jwt from './jwt';
 import passport from './authenticate/init';
 import encryptPassword from './encrypt';
-require('dotenv').config();
-
-const express = require('express');
-const bodyParser = require('body-parser');
-const { v4: uuidv4 } = require('uuid');
+import express, { Request, Response } from 'express';
+import bodyParser from 'body-parser';
+import 'dotenv/config';
+import { v4 as uuidv4 } from 'uuid';
 
 const app = express();
 app.use(bodyParser.json());
 // passportの初期化
 app.use(passport.initialize());
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT ?? 3000;
 
 DB.init();
 
-app.use('/', async (req: any, res: any, next: any) => {
+app.use('/', async (req: Request, res: Response, next: any) => {
   if (req.body.action === 'registerUser') {
     next();
     return;
@@ -33,7 +32,7 @@ app.use('/', async (req: any, res: any, next: any) => {
   }
 });
 
-function generateRandomPassword(length = 32) {
+function generateRandomPassword(length = 32): string {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const passwordArray = [];
 
@@ -44,33 +43,30 @@ function generateRandomPassword(length = 32) {
   return passwordArray.join('');
 }
 
-async function registerUser(req: any, res: any) {
+async function registerUser(req: Request, res: Response) {
   console.log('ユーザー登録');
   const userId = uuidv4();
   const token = jwt.generateAccessToken(userId);
   const password = generateRandomPassword();
   const map = await encryptPassword(password);
+  const hashedPassword = map?.get('password');
+  const salt = map?.get('salt');
 
-  if (map === null) {
-    console.log('Failed to encryptPassword');
+  if (hashedPassword === undefined || salt === undefined) {
+    console.log('Failed to get password or salt from map');
     res.json({ access_token: '' });
     return;
   }
-
-  console.log(`hashed: ${map.get('password')}`);
-  console.log(`salt: ${map.get('salt')}`);
+  
+  console.log(`hashed: ${hashedPassword}`);
+  console.log(`salt: ${salt}`);
   console.log(`token: ${token}`);
 
-  DB.registerUser(
-    userId,
-    map.get('password') as any,
-    map.get('salt') as any,
-    token,
-  );
+  DB.registerUser(userId, hashedPassword, salt, token);
   res.json({ access_token: token });
 }
 
-async function getAllExpenses(req: any, res: any) {
+async function getAllExpenses(req: Request, res: Response) {
   const accessToken = req.headers.authorization;
   const expenses = await DB.getAllExpenses(accessToken);
   console.log(expenses);
@@ -78,7 +74,7 @@ async function getAllExpenses(req: any, res: any) {
   res.json(json);
 }
 
-async function deleteExpense(req: any, res: any) {
+async function deleteExpense(req: Request, res: Response) {
   if (Utility.includesNeededParamsForDeleteExpense(req.body)) {
     const accessToken = req.headers.authorization;
 
@@ -92,7 +88,7 @@ async function deleteExpense(req: any, res: any) {
   }
 }
 
-async function insertExpense(req: any, res: any) {
+async function insertExpense(req: Request, res: Response) {
   if (Utility.includesNeededParamsForInsertExpense(req.body)) {
     const accessToken = req.headers.authorization
 
@@ -112,7 +108,7 @@ async function insertExpense(req: any, res: any) {
 
 app.post(
   '/',
-  async (req: any, res: any) => {
+  async (req: Request, res: Response) => {
     switch (req.body.action) {
       case 'insertExpense':
         await insertExpense(req, res);
@@ -130,7 +126,7 @@ app.post(
   },
 );
 
-app.post('/registerUser', async (req: any, res: any) => {
+app.post('/registerUser', async (req: Request, res: Response) => {
   await registerUser(req, res);
 });
 
