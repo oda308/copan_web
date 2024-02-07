@@ -1,4 +1,3 @@
-import { assert } from 'console';
 import DB from './db/db';
 import Utility from './utility';
 import jwt from './jwt';
