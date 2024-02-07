@@ -38,7 +38,7 @@ function generateRandomPassword(length = 32) {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const passwordArray = [];
 
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < length; i += 1) {
     const randomIndex = Math.floor(Math.random() * characters.length);
     passwordArray.push(characters.charAt(randomIndex));
   }
