@@ -1,8 +1,12 @@
-export interface ExpenseRequestBody {
+export interface InsertExpenseRequestBody {
   price: number;
   categoryId: number;
   date: string;
   description: string;
+  expenseUuid: string;
+}
+
+export interface DeleteExpenseRequestBody {
   expenseUuid: string;
 }
 

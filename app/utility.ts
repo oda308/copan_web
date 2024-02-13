@@ -1,5 +1,8 @@
+import { DeleteExpenseRequestBody, InsertExpenseRequestBody } from "./interfaces";
+
 export default class Utility {
-  static includesNeededParamsForInsertExpense(body: any): boolean {
+  // TODO: 呼び出し元でキャストした時のエラーを見れば不要と思う
+  static includesNeededParamsForInsertExpense(body: InsertExpenseRequestBody): boolean {
     if (body.price != null
       && body.categoryId != null
       && body.description != null
@@ -11,7 +14,8 @@ export default class Utility {
     return false;
   }
 
-  static includesNeededParamsForDeleteExpense(body: any): boolean {
+  // TODO: 呼び出し元でキャストした時のエラーを見れば不要と思う
+  static includesNeededParamsForDeleteExpense(body: DeleteExpenseRequestBody): boolean {
     return body.expenseUuid != null;
   }
 }

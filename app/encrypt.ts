@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+import * as crypto from 'crypto';
 
 // パスワードをハッシュ化する
 async function encryptPassword(password: string, salt?: string)
@@ -12,10 +12,16 @@ async function encryptPassword(password: string, salt?: string)
   }
 
   return new Promise((resolve) => {
-    crypto.pbkdf2(password, usedSalt, 310000, 32, 'sha256', (err: Error, hashedPassword: Buffer) => {
+    crypto.pbkdf2(
+      password,
+      usedSalt,
+      310000,
+      32,
+      'sha256',
+      (err: Error | null, hashedPassword: Buffer) => {
       // パスワードのハッシュ化でエラー
       if (err) {
-        console.log(`err: ${err}`);
+        console.log(`err: ${err.message}`);
         resolve(null);
       }
 

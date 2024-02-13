@@ -7,7 +7,7 @@ import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import 'dotenv/config';
 import { v4 as uuidv4 } from 'uuid';
-import { ExpenseRequestBody, LoginRequestBody } from './interfaces';
+import { DeleteExpenseRequestBody, InsertExpenseRequestBody, LoginRequestBody } from './interfaces';
 
 const app = express();
 app.use(bodyParser.json());
@@ -18,7 +18,7 @@ const port = process.env.PORT ?? 3000;
 
 DB.init();
 
-app.use('/', async (req: Request, res: Response, next: any) => {
+app.use('/', (req: Request, res: Response, next: any) => {
   if (req.body.action === 'registerUser') {
     next();
     return;
@@ -69,19 +69,26 @@ async function registerUser(req: Request, res: Response) {
 
 async function getAllExpenses(req: Request, res: Response) {
   const accessToken = req.headers.authorization;
+
+  if (accessToken === undefined) {
+    console.log('accessToken is undefined.');
+    return;
+  }
+  
   const expenses = await DB.getAllExpenses(accessToken);
   console.log(expenses);
   const json = JSON.stringify([...expenses]);
   res.json(json);
 }
 
-async function deleteExpense(req: Request, res: Response) {
-  if (Utility.includesNeededParamsForDeleteExpense(req.body)) {
+function deleteExpense(req: Request, res: Response) {
+  const body = req.body as DeleteExpenseRequestBody;
+  if (Utility.includesNeededParamsForDeleteExpense(body)) {
     const accessToken = req.headers.authorization;
 
-    await DB.deleteExpense(
+    void DB.deleteExpense(
       accessToken,
-      req.body.expenseUuid,
+      body.expenseUuid,
     );
     res.send('Succeeded delete record');
   } else {
@@ -94,11 +101,11 @@ function insertExpense(req: Request, res: Response) {
     const accessToken = req.headers.authorization;
  
     if (accessToken === undefined) {
-      // TODO: これだとサーバー機能停止しない？
-      throw new Error('accessToken is undefined.');
+      console.log('accessToken is undefined.');
+      return;
     }
 
-    const body = req.body as ExpenseRequestBody;
+    const body = req.body as InsertExpenseRequestBody;
 
     DB.insertExpense(
       accessToken,

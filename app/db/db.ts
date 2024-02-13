@@ -1,12 +1,13 @@
 /* eslint-disable no-console */
 
 import jwt from "../jwt";
+import * as dotenv from 'dotenv';
+import { Pool, PoolClient, QueryResult } from 'pg';
 
-require('dotenv').config();
-const { Pool } = require('pg');
+dotenv.config();
 
 export default class DB {
-  static client: any;
+  static client: Pool;
 
   static init() {
     DB.client = DB.getDBClient();
@@ -15,11 +16,17 @@ export default class DB {
   static connect() {
     return new Promise((resolve) => {
       DB.client.connect()
-        .then((connect: any) => {
+        .then((connect: PoolClient) => {
           console.log('connected');
           resolve(connect);
         }).catch(
-          (err: any) => console.error('error', err.stack),
+          (err: Error) => {
+          if (err) {
+            console.error('error', err.stack);
+          } else {
+            console.error('An undefined error occurred');
+          }
+          }
         );
     });
   }
@@ -33,16 +40,15 @@ export default class DB {
     expenseUuid: string,
   ) {
     const queryString = 'INSERT INTO expenses(last_updated, price, category, date, content, expense_uuid, email) VALUES(current_timestamp, $1, $2, $3, $4, $5, $6)';
-    DB.client
-      .connect()
-      .then((client: any) => {
+     void DB.client.connect()
+      .then((client: PoolClient) => {
         client
           .query(queryString, [price, category, date, content, expenseUuid, jwt.getEmailFromAccessToken(accessToken)])
-          .then((res: any) => {
+          .then((res: QueryResult) => {
             client.release();
             console.log(res.rows[0]);
           })
-          .catch((err: any) => {
+          .catch((err: Error) => {
             client.release();
             console.log(err.stack);
           });
@@ -55,16 +61,16 @@ export default class DB {
   ) {
     const queryString = 'DELETE FROM expenses WHERE expense_uuid = $1 AND email = $2';
 
-    DB.client
+    void DB.client
       .connect()
-      .then((client: any) => {
+      .then((client: PoolClient) => {
         client
           .query(queryString, [expenseUuid, jwt.getEmailFromAccessToken(accessToken)])
-          .then((res: any) => {
+          .then((res: QueryResult) => {
             client.release();
             console.log(res.rows[0]);
           })
-          .catch((err: any) => {
+          .catch((err: Error) => {
             client.release();
             console.log(err.stack);
           });
@@ -77,17 +83,17 @@ export default class DB {
     const queryString = 'SELECT COUNT(*) FROM users WHERE email = $1';
 
     return new Promise((resolve) => {
-      DB.client
+      void DB.client
         .connect()
-        .then((client: any) => {
+        .then((client: PoolClient) => {
           client
             .query(queryString, [email])
-            .then((res: any) => {
+            .then((res: QueryResult) => {
               client.release();
-              console.log(`登録済みユーザ数: ${res.rows[0].count}`);
-              resolve(res.rows[0].count > 0);
+              console.log(`登録済みユーザ数: ${res.rows[0]}`);
+              resolve(res.rows[0] > 0);
             })
-            .catch((err: any) => {
+            .catch((err: Error) => {
               client.release();
               console.log(err.stack);
             });
@@ -104,40 +110,40 @@ export default class DB {
     const queryString = 'INSERT INTO users (name, email, password, salt, access_token) VALUES ($1, $2, $3, $4, $5)';
     const values = ['', email, password, salt, accessToken];
 
-    DB.client
+    void DB.client
       .connect()
-      .then((client: any) => {
+      .then((client: PoolClient) => {
         client
           .query(queryString, values)
-          .then((res: any) => {
+          .then((res: QueryResult) => {
             client.release();
             console.log(res.rows[0]);
           })
-          .catch((err: any) => {
+          .catch((err: Error) => {
             client.release();
             console.log(err.stack);
           });
       });
   }
 
-  static async getAllExpenses(accessToken: string): Promise<any> {
+  static async getAllExpenses(accessToken: string) {
     const queryString = 'SELECT * FROM expenses WHERE expenses.email = $1';
     const values = [jwt.getEmailFromAccessToken(accessToken)]
 
     return new Promise((resolve) => {
-      DB.client
+      void DB.client
         .connect()
-        .then((client: any) => {
+        .then((client: PoolClient) => {
           client
             .query(queryString, values)
-            .then((res: any) => {
+            .then((res: QueryResult) => {
               console.log(res.rows);
               resolve(res.rows);
               client.release();
             })
-            .catch((err: any) => {
+            .catch((err: Error) => {
               client.release();
-              throw Error(`Failed getAllExpenses : ${err}`);
+              throw Error(`Failed getAllExpenses : ${err.message}`);
             });
         });
     });
@@ -147,15 +153,15 @@ export default class DB {
     const queryString = 'SELECT password, salt FROM users WHERE email = $1';
 
     return new Promise((resolve) => {
-      DB.client
+      void DB.client
         .connect()
-        .then((client: any) => {
+        .then((client: PoolClient) => {
           client
             .query(queryString, [email])
-            .then((res: any) => {
+            .then((res: QueryResult) => {
               client.release();
               console.log(res.rows);
-              const row = res.rows[0];
+              const row = res.rows[0] as { password: string, salt: string } | undefined;
 
               if (row === undefined) {
                 resolve(null);
@@ -167,9 +173,9 @@ export default class DB {
               map.set('salt', row.salt);
               resolve(map);
             })
-            .catch((err: any) => {
+            .catch((err: Error) => {
               client.release();
-              throw Error(`Failed getHashedPassword : ${err}`);
+              throw Error(`Failed getHashedPassword : ${err.message}`);
             });
         });
     });
@@ -182,7 +188,7 @@ export default class DB {
     const host = process.env.HOST;
     const db = process.env.DB;
     const password = process.env.PASSWORD;
-    const dbPort = process.env.DB_PORT;
+    const dbPort = process.env.DB_PORT as number | undefined;
 
     if (user === undefined) {
       throw console.log('user is undefined');
@@ -215,7 +221,7 @@ export default class DB {
       host,
       database: db,
       password,
-      dbPort,
+      port: dbPort,
     });
   }
 }
