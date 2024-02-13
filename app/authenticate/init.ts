@@ -1,12 +1,10 @@
 import jwt from '../jwt';
 import encryptPassword from '../encrypt';
 import DB from '../db/db';
-
-const LocalStrategy = require('passport-local');
-const crypto = require('crypto');
-const JwtStrategy = require('passport-jwt').Strategy;
-const { ExtractJwt } = require('passport-jwt');
-const passport = require('passport');
+import LocalStrategy from 'passport-local';
+import crypto from 'crypto';
+import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
+import passport from 'passport';
 
 export default passport;
 

@@ -82,23 +82,16 @@ export default class DB {
   ): Promise<boolean> {
     const queryString = 'SELECT COUNT(*) FROM users WHERE email = $1';
 
-    return new Promise((resolve) => {
-      void DB.client
-        .connect()
-        .then((client: PoolClient) => {
-          client
-            .query(queryString, [email])
-            .then((res: QueryResult) => {
-              client.release();
-              console.log(`登録済みユーザ数: ${res.rows[0]}`);
-              resolve(res.rows[0] > 0);
-            })
-            .catch((err: Error) => {
-              client.release();
-              console.log(err.stack);
-            });
-        });
-    });
+    try {
+        const client = await DB.client.connect();
+        const res = await client.query(queryString, [email]);
+        client.release();
+        console.log(`登録済みユーザ数: ${res.rows[0]}`);
+        return res.rows[0] > 0;
+    } catch (err: unknown) {
+        console.error(err);
+        throw err;
+    }
   }
 
   static registerUser(

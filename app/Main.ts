@@ -3,7 +3,7 @@ import Utility from './utility';
 import jwt from './jwt';
 import passport from './authenticate/init';
 import encryptPassword from './encrypt';
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';
 import 'dotenv/config';
 import { v4 as uuidv4 } from 'uuid';
@@ -18,19 +18,24 @@ const port = process.env.PORT ?? 3000;
 
 DB.init();
 
-app.use('/', (req: Request, res: Response, next: any) => {
+app.use('/', (req: Request, res: Response, next: NextFunction) => {
   if (req.body.action === 'registerUser') {
     next();
     return;
   }
   const email = jwt.getEmailFromAccessToken(req.headers.authorization);
-  const isRegistered = await DB.isUserRegistered(email);
-
-  if (isRegistered) {
-    next();
-  } else {
-    res.status(401).json({ message: 'Authentication failed: User not registered.' });
-  }
+  DB.isUserRegistered(email)
+    .then((isRegistered: boolean) => {
+      if (isRegistered) {
+        next();
+      } else {
+        res.status(401).json({ message: 'Authentication failed: User not registered.' });
+      }
+    })
+    .catch((error: Error) => {
+      console.error('Error:', error);
+      res.status(500).json({ message: 'Internal Server Error' });
+    });
 });
 
 function generateRandomPassword(length = 32): string {

@@ -1,4 +1,4 @@
-const jsonwebtoken = require('jsonwebtoken');
+import * as jsonwebtoken from 'jsonwebtoken';
 
 export const jwtSecret = 'secret';
 
@@ -7,18 +7,18 @@ export function generateAccessToken(email: string): string {
   const token = jsonwebtoken.sign(payload, jwtSecret, {
     expiresIn: '30d',
   });
-  console.log('token: \(token)');
+  console.log(`token: ${token}`);
   return token;
 }
 
-export function getEmailFromAccessToken(accessToken: string) {
+export function getEmailFromAccessToken(accessToken: string): string  {
   try {
     const decoded = jsonwebtoken.verify(accessToken, jwtSecret);
     console.log(decoded.email);
     return decoded.email;
   } catch (error) {
     console.error('Error decoding JWT:', error);
-    return null;
+    return '';
   }
 }
 
