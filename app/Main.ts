@@ -7,6 +7,7 @@ import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import 'dotenv/config';
 import { v4 as uuidv4 } from 'uuid';
+import { ExpenseRequestBody, LoginRequestBody } from './interfaces';
 
 const app = express();
 app.use(bodyParser.json());
@@ -88,17 +89,24 @@ async function deleteExpense(req: Request, res: Response) {
   }
 }
 
-async function insertExpense(req: Request, res: Response) {
+function insertExpense(req: Request, res: Response) {
   if (Utility.includesNeededParamsForInsertExpense(req.body)) {
-    const accessToken = req.headers.authorization
+    const accessToken = req.headers.authorization;
+ 
+    if (accessToken === undefined) {
+      // TODO: これだとサーバー機能停止しない？
+      throw new Error('accessToken is undefined.');
+    }
 
-    await DB.insertExpense(
+    const body = req.body as ExpenseRequestBody;
+
+    DB.insertExpense(
       accessToken,
-      req.body.price,
-      req.body.categoryId,
-      req.body.date,
-      req.body.description,
-      req.body.expenseUuid,
+      body.price,
+      body.categoryId,
+      body.date,
+      body.description,
+      body.expenseUuid,
     );
     res.send('Succeeded insert record');
   } else {
@@ -106,18 +114,16 @@ async function insertExpense(req: Request, res: Response) {
   }
 }
 
-app.post(
-  '/',
-  async (req: Request, res: Response) => {
-    switch (req.body.action) {
+app.post('/', (req: Request, res: Response) => {
+    switch (req.body.action as string) {
       case 'insertExpense':
-        await insertExpense(req, res);
+        void insertExpense(req, res);
         break;
       case 'deleteExpense':
-        await deleteExpense(req, res);
+        void deleteExpense(req, res);
         break;
       case 'getAllExpenses':
-        await getAllExpenses(req, res);
+        void getAllExpenses(req, res);
         break;
       default:
         console.log('Error: Unknown action');
@@ -126,18 +132,21 @@ app.post(
   },
 );
 
-app.post('/registerUser', async (req: Request, res: Response) => {
-  await registerUser(req, res);
+app.post('/registerUser',  (req: Request, res: Response) => {
+  void registerUser(req, res);
 });
 
 app.post(
   '/auth/login',
   passport.authenticate('local', { session: false }),
-  (req: any, res: any) => {
+  (req: Request, res: Response) => {
+
+    const body = req.body as LoginRequestBody;
+
     console.log('Login Successful!');
-    console.log(`email: ${req.body.email}`);
-    console.log(`password: ${req.body.password}`);
-    res.json({ accessToken: jwt.generateAccessToken(req.body.email) });
+    console.log(`email: ${body.email}`);
+    console.log(`password: ${body.password}`);
+    res.json({ accessToken: jwt.generateAccessToken(body.email) });
   },
 );
 
