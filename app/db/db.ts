@@ -43,7 +43,7 @@ export default class DB {
      void DB.client.connect()
       .then((client: PoolClient) => {
         client
-          .query(queryString, [price, category, date, content, expenseUuid, jwt.getEmailFromAccessToken(accessToken)])
+          .query(queryString, [price, category, date, content, expenseUuid, jwt.extractEmail(accessToken)])
           .then((res: QueryResult) => {
             client.release();
             console.log(res.rows[0]);
@@ -65,7 +65,7 @@ export default class DB {
       .connect()
       .then((client: PoolClient) => {
         client
-          .query(queryString, [expenseUuid, jwt.getEmailFromAccessToken(accessToken)])
+          .query(queryString, [expenseUuid, jwt.extractEmail(accessToken)])
           .then((res: QueryResult) => {
             client.release();
             console.log(res.rows[0]);
@@ -119,9 +119,9 @@ export default class DB {
       });
   }
 
-  static async getAllExpenses(accessToken: string) {
+  static async getAllExpenses(accessToken: string): Promise<[any]> {
     const queryString = 'SELECT * FROM expenses WHERE expenses.email = $1';
-    const values = [jwt.getEmailFromAccessToken(accessToken)]
+    const values = [jwt.extractEmail(accessToken)]
 
     return new Promise((resolve) => {
       void DB.client

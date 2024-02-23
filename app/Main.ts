@@ -19,11 +19,17 @@ const port = process.env.PORT ?? 3000;
 DB.init();
 
 app.use('/', (req: Request, res: Response, next: NextFunction) => {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   if (req.body.action === 'registerUser') {
     next();
     return;
   }
-  const email = jwt.getEmailFromAccessToken(req.headers.authorization);
+  if (req.headers.authorization === undefined) {
+    res.status(401).json({ message: 'Authentication failed: No access token' });
+    return;
+  }
+
+  const email = jwt.extractEmail(req.headers.authorization);
   DB.isUserRegistered(email)
     .then((isRegistered: boolean) => {
       if (isRegistered) {

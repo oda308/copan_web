@@ -11,9 +11,9 @@ export function generateAccessToken(email: string): string {
   return token;
 }
 
-export function getEmailFromAccessToken(accessToken: string): string  {
+export function extractEmail(accessToken: string): string  {
   try {
-    const decoded = jsonwebtoken.verify(accessToken, jwtSecret);
+    const decoded = jsonwebtoken.verify(accessToken, jwtSecret) as { email: string };
     console.log(decoded.email);
     return decoded.email;
   } catch (error) {
@@ -25,5 +25,5 @@ export function getEmailFromAccessToken(accessToken: string): string  {
 export default {
   jwtSecret,
   generateAccessToken,
-  getEmailFromAccessToken,
+  extractEmail,
 };
