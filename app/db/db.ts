@@ -3,6 +3,7 @@
 import jwt from "../jwt";
 import * as dotenv from 'dotenv';
 import { Pool, PoolClient, QueryResult } from 'pg';
+import { DBExpense} from '../interfaces';
 
 dotenv.config();
 
@@ -119,9 +120,9 @@ export default class DB {
       });
   }
 
-  static async getAllExpenses(accessToken: string): Promise<[any]> {
-    const queryString = 'SELECT * FROM expenses WHERE expenses.email = $1';
-    const values = [jwt.extractEmail(accessToken)]
+  static async getAllExpenses(accessToken: string): Promise<DBExpense[]> {
+    const queryString = 'SELECT category, content, date, expense_uuid, price FROM expenses WHERE expenses.email = $1';
+    const values = [jwt.extractEmail(accessToken)];
 
     return new Promise((resolve) => {
       void DB.client
@@ -129,20 +130,27 @@ export default class DB {
         .then((client: PoolClient) => {
           client
             .query(queryString, values)
-            .then((res: QueryResult) => {
+            .then((res: QueryResult<DBExpense>) => {
               console.log(res.rows);
-              resolve(res.rows);
+              const expenses: DBExpense[] = res.rows.map((row) => ({
+                category: row.category,
+                content: row.content,
+                date: row.date,
+                expenseUuid: row.expenseUuid,
+                price: row.price,
+              }));
+              resolve(expenses);
               client.release();
             })
             .catch((err: Error) => {
               client.release();
               throw Error(`Failed getAllExpenses : ${err.message}`);
             });
-        });
+        }); 
     });
   }
 
-  static async getHashedPassword(email: string): Promise<Map<string, string> | null> {
+  static async getHashedPassword(email: string): Promise<Map<string, string>> {
     const queryString = 'SELECT password, salt FROM users WHERE email = $1';
 
     return new Promise((resolve) => {
@@ -157,7 +165,7 @@ export default class DB {
               const row = res.rows[0] as { password: string, salt: string } | undefined;
 
               if (row === undefined) {
-                resolve(null);
+                resolve(new Map());
                 return;
               }
 
@@ -218,3 +226,7 @@ export default class DB {
     });
   }
 }
+
+// category: int, content:string , date: string, expense_uuid: string, price: int
+
+

@@ -97,6 +97,11 @@ function deleteExpense(req: Request, res: Response) {
   if (Utility.includesNeededParamsForDeleteExpense(body)) {
     const accessToken = req.headers.authorization;
 
+    if (accessToken === undefined) {
+      console.log('accessToken is undefined.');
+      return;
+    }
+
     void DB.deleteExpense(
       accessToken,
       body.expenseUuid,
@@ -108,7 +113,9 @@ function deleteExpense(req: Request, res: Response) {
 }
 
 function insertExpense(req: Request, res: Response) {
-  if (Utility.includesNeededParamsForInsertExpense(req.body)) {
+  const body = req.body as InsertExpenseRequestBody;
+
+  if (Utility.includesNeededParamsForInsertExpense(body)) {
     const accessToken = req.headers.authorization;
  
     if (accessToken === undefined) {
@@ -133,7 +140,9 @@ function insertExpense(req: Request, res: Response) {
 }
 
 app.post('/', (req: Request, res: Response) => {
-    switch (req.body.action as string) {
+  const action = (req.body as { action: string }).action;
+
+    switch (action) {
       case 'insertExpense':
         void insertExpense(req, res);
         break;
@@ -156,6 +165,7 @@ app.post('/registerUser',  (req: Request, res: Response) => {
 
 app.post(
   '/auth/login',
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   passport.authenticate('local', { session: false }),
   (req: Request, res: Response) => {
 

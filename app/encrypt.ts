@@ -2,7 +2,7 @@ import * as crypto from 'crypto';
 
 // パスワードをハッシュ化する
 async function encryptPassword(password: string, salt?: string)
-  : Promise<Map<string, string> | null> {
+  : Promise<Map<string, string>> {
   let usedSalt: string;
   if (salt === undefined) {
     // saltを作成
@@ -22,7 +22,7 @@ async function encryptPassword(password: string, salt?: string)
       // パスワードのハッシュ化でエラー
       if (err) {
         console.log(`err: ${err.message}`);
-        resolve(null);
+        resolve(new Map());
       }
 
       const map = new Map<string, string>();

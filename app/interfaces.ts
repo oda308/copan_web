@@ -14,3 +14,11 @@ export interface LoginRequestBody {
   email: string;
   password: string;
 }
+
+export interface DBExpense { 
+  category: number;
+  content: string;
+  date: string;
+  expenseUuid: string;
+  price: number;
+}
