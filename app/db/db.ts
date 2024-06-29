@@ -84,11 +84,18 @@ export default class DB {
     const queryString = 'SELECT COUNT(*) FROM users WHERE email = $1';
 
     try {
-        const client = await DB.client.connect();
-        const res = await client.query(queryString, [email]);
-        client.release();
-        console.log(`登録済みユーザ数: ${res.rows[0]}`);
-        return res.rows[0] > 0;
+      const client = await DB.client.connect();
+      const res = await client.query(queryString, [email]);
+      client.release();
+
+      const result = res.rows[0] as { count: number } | undefined;
+
+      if (result === undefined) {
+        console.error('count is undefined');
+        return false;
+      }
+      console.log(`登録済みユーザ数: ${result.count}`);
+      return result.count > 0;
     } catch (err: unknown) {
         console.error(err);
         throw err;
